@@ -22,15 +22,15 @@ dependencyResolutionManagement {
  * If this is not the case, please change the nextLibDirPath.
  */
 
-//val nextLibDirPath = "../nextlib"
-//if (File(nextLibDirPath).exists()) {
-//    includeBuild(nextLibDirPath) {
-//        dependencySubstitution {
-//            substitute(module("com.github.anilbeesetti.nextlib:nextlib-media3ext")).using(project(":media3ext"))
-//            substitute(module("com.github.anilbeesetti.nextlib:nextlib-mediainfo")).using(project(":mediainfo"))
-//        }
-//    }
-//}
+val nextLibDirPath = "../nextlib"
+if (File(nextLibDirPath).exists()) {
+    includeBuild(nextLibDirPath) {
+        dependencySubstitution {
+            substitute(module("com.github.anilbeesetti.nextlib:nextlib-media3ext")).using(project(":media3ext"))
+            substitute(module("com.github.anilbeesetti.nextlib:nextlib-mediainfo")).using(project(":mediainfo"))
+        }
+    }
+}
 
 rootProject.name = "NextPlayer"
 include(":app")

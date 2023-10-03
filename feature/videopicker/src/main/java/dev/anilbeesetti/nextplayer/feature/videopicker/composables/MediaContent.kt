@@ -6,8 +6,10 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,6 +18,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -24,6 +28,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.SheetState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -101,6 +106,7 @@ fun VideosListFromState(
     val haptic = LocalHapticFeedback.current
     var showMediaActionsFor: Video? by rememberSaveable { mutableStateOf(null) }
     var deleteAction: Video? by rememberSaveable { mutableStateOf(null) }
+    var showInfoAction: Video? by rememberSaveable { mutableStateOf(null) }
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -167,6 +173,16 @@ fun VideosListFromState(
                     }
                 }
             )
+            BottomSheetItem(
+                text = "properties",
+                icon = NextIcons.Info,
+                onClick = {
+                    showInfoAction = it
+                    scope.launch { bottomSheetState.hide() }.invokeOnCompletion {
+                        if (!bottomSheetState.isVisible) showMediaActionsFor = null
+                    }
+                }
+            )
         }
     }
 
@@ -180,6 +196,82 @@ fun VideosListFromState(
             },
             fileNames = listOf(it.nameWithExtension)
         )
+    }
+
+    showInfoAction?.let {
+        NextDialog(
+            onDismissRequest = { showInfoAction = null },
+            title = { Text(text = it.displayName, maxLines = 1, overflow = TextOverflow.Ellipsis) },
+            content = {
+                Column(
+                    verticalArrangement = Arrangement.spacedBy(5.dp),
+                    modifier = Modifier.verticalScroll(rememberScrollState())
+                ) {
+                    Text(
+                        text = "File",
+                        style = MaterialTheme.typography.titleLarge,
+                        modifier = Modifier.padding(vertical = 5.dp)
+                    )
+                    MediaInfoText(title = "File", subText = it.nameWithExtension)
+                    MediaInfoText(title = "Location", subText = it.parentPath)
+                    MediaInfoText(title = "Size", subText = it.formattedFileSize)
+                    MediaInfoText(title = "Format", subText = it.format.toString())
+                    it.videoStream?.let {
+                        Text(
+                            text = "Video Track",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(vertical = 5.dp)
+                        )
+                        MediaInfoText(title = "Title", subText = it.title.toString())
+                        MediaInfoText(title = "Codec", subText = it.codecName)
+                        MediaInfoText(title = "Resolution", subText = "${it.frameWidth} x ${it.frameHeight}")
+                        MediaInfoText(title = "Frame rate", subText = it.frameRate.toInt().toString())
+                        MediaInfoText(title = "Bitrate", subText = it.bitRate.toString())
+                    }
+                    it.audioStreams.forEachIndexed { index, it ->
+                        Text(
+                            text = "Audio Track #${index + 1}",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(vertical = 5.dp)
+                        )
+                        MediaInfoText(title = "Title", subText = it.title.toString())
+                        MediaInfoText(title = "Codec", subText = it.codecName)
+                        MediaInfoText(title = "Sample rate", subText = it.sampleRate.toString())
+                        MediaInfoText(title = "Sample format", subText = it.sampleFormat.toString())
+                        MediaInfoText(title = "Bitrate", subText = it.bitRate.toString())
+                        MediaInfoText(title = "Channels", subText = it.channelLayout ?: it.channels.toString())
+                    }
+                    it.subtitleStreams.forEachIndexed { index, it ->
+                        Text(
+                            text = "Subtitle Track #${index + 1}",
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier.padding(vertical = 5.dp)
+                        )
+                        MediaInfoText(title = "Title", subText = it.title.toString())
+                        MediaInfoText(title = "Codec", subText = it.codecName)
+                        MediaInfoText(title = "Language", subText = it.language.toString())
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(onClick = { showInfoAction = null }) {
+                    Text(text = "Okay")
+                }
+            },
+            dismissButton = { /*TODO*/ }
+        )
+    }
+}
+
+@Composable
+fun MediaInfoText(
+    title: String,
+    subText: String,
+    modifier: Modifier = Modifier
+) {
+    Row(modifier = modifier) {
+        Text(text = "$title: ", style = MaterialTheme.typography.titleSmall)
+        Text(text = subText)
     }
 }
 
