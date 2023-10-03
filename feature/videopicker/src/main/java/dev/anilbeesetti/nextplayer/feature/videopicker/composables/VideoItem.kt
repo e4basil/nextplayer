@@ -1,5 +1,6 @@
 package dev.anilbeesetti.nextplayer.feature.videopicker.composables
 
+import android.util.Log
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -66,9 +67,9 @@ fun VideoItem(
                         .align(Alignment.Center)
                         .fillMaxSize(0.5f)
                 )
-                if (video.uriString.isNotEmpty() && preferences.showThumbnailField) {
+                if (!video.thumbnailPath.isNullOrEmpty() && preferences.showThumbnailField) {
                     GlideImage(
-                        imageModel = { video.uriString },
+                        imageModel = { video.thumbnailPath },
                         imageOptions = ImageOptions(
                             contentScale = ContentScale.Crop,
                             alignment = Alignment.Center
